@@ -141,7 +141,6 @@
                 slotCanvas.width = 114;
                 slotCanvas.height = 162;
                 let slotCtx = slotCanvas.getContext("2d");
-                slotCtx.clip(maskPath);
                 for (let image of [...slot.images].reverse()) {
                     let cached = cachedImage.get(image.image);
                     if (
@@ -173,7 +172,10 @@
                 cachedSlot.set(slot.name, slotCanvas);
                 slot.dirty = false;
             }
+            ctx.save();
+            ctx.clip(maskPath);
             ctx.drawImage(cachedSlot.get(slot.name), 0, 0);
+            ctx.restore();
             await wait();
         }
         ctx.resetTransform();
