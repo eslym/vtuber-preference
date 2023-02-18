@@ -1,4 +1,7 @@
 <script lang="ts">
+    import { createEventDispatcher } from "svelte";
+    import type { Pos, Rect } from "./types";
+
     export let x: number;
     export let y: number;
     export let width: number;
@@ -10,6 +13,10 @@
     let dragFunc: (pos: { x: number; y: number }) => void = () => {};
 
     let bodyClass = "";
+
+    let dispatch = createEventDispatcher<{
+        update: { pos: Pos; rect: Rect };
+    }>();
 
     function mouseDown(
         event: MouseEvent,
@@ -23,16 +30,13 @@
         document.body.classList.add(claz);
     }
 
-    function mouseUp() {
-        dragging = undefined;
-    }
-
     function mouseMove(event: MouseEvent) {
         if (!dragging) return;
         dragFunc({
             x: event.clientX,
             y: event.clientY,
         });
+        dispatch("update", { pos: { x, y }, rect: { width, height } });
     }
 
     function move(event: MouseEvent) {

@@ -3,6 +3,7 @@
 
     export let slot: Slot;
     export let selectedImage: number | undefined;
+    export let selectedSlot: number;
 
     let input: HTMLInputElement;
     let form: HTMLFormElement;
@@ -28,16 +29,15 @@
                 let img: SlotImage = {
                     name: file.name,
                     image: image,
-                    width: image.width,
-                    height: image.height,
-                    position: {
+                    pos: {
                         x: 56 - rect.width / 2,
                         y: 80 - rect.height / 2,
-                        ...rect,
                     },
+                    rect,
                 };
-                selectedImage = slot.images.length;
-                slot.images = [...slot.images, img];
+                selectedImage = 0;
+                slot.images = [img, ...slot.images];
+                slot.dirty = true;
             };
             image.src = reader.result as string;
         };
@@ -77,16 +77,30 @@
     <div
         class="flex flex-row items-center bg-slate-600 text-xl font-bold text-white"
     >
+        <button
+            class="p-2"
+            on:click={() => {
+                selectedSlot = (15 + selectedSlot - 1) % 15;
+                selectedImage = undefined;
+            }}>＜</button
+        >
         {#if slot.dynamic === undefined}
-            <div class="px-4 py-2">{slot.name}</div>
+            <div class="w-0 flex-grow px-4 py-2">{slot.name}</div>
         {:else}
             <div class="py-2 pl-4">{slot.name}</div>
             <input
                 bind:value={slot.dynamic}
-                class="w-0 flex-grow bg-transparent py-2 pr-4 font-normal text-slate-200 underline-offset-4 placeholder:text-slate-200 placeholder:underline focus:outline-none"
-                placeholder="　　　　　　　　　　　　　　　　　　　　　　　　"
+                class="w-0 flex-grow bg-transparent py-2 pr-4 font-normal text-slate-200 underline-offset-4 placeholder:text-slate-400 placeholder:underline focus:outline-none"
+                placeholder="(自行输入)　　　　　　　　　　　　　　　　　　　　"
             />
         {/if}
+        <button
+            class="p-2"
+            on:click={() => {
+                selectedSlot = (selectedSlot + 1) % 15;
+                selectedImage = undefined;
+            }}>＞</button
+        >
     </div>
     <div class="flex h-0 flex-grow flex-col gap-2 p-4">
         <form class="hidden" bind:this={form}>
@@ -106,7 +120,10 @@
             >
                 <div
                     on:dragstart={(event) => dragStart(event, index)}
-                    on:dragend={() => (dragging = false)}
+                    on:dragend={() => {
+                        dragging = false;
+                        setTimeout(() => (slot.dirty = true));
+                    }}
                     class="flex w-0 flex-grow items-center gap-4 overflow-hidden"
                     draggable="true"
                 >
@@ -124,13 +141,14 @@
                     class="h-10 w-10 bg-slate-500 font-bold text-white"
                     on:click={() => {
                         slot.images = slot.images.filter((i) => i !== image);
+                        slot.dirty = true;
                         selectedImage =
                             selectedImage > index
                                 ? selectedImage - 1
                                 : selectedImage < index
                                 ? selectedImage
                                 : undefined;
-                    }}>－</button
+                    }}>Ｘ</button
                 >
             </div>
         {/each}
