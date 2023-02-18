@@ -123,7 +123,7 @@
     }
 
     async function draw(slots: Slot[]) {
-        if (drawing || !dirty) return;
+        if (drawing) return;
         dirty = false;
         drawing = true;
         let tempCanvas = document.createElement("canvas");
@@ -203,7 +203,9 @@
     let interval: NodeJS.Timer;
 
     onMount(() => {
-        interval = setInterval(() => draw(slots), 10);
+        interval = setInterval(() => {
+            if (dirty) draw(slots);
+        }, 10);
     });
 
     onDestroy(() => {
@@ -215,7 +217,7 @@
     class="hidden"
     src={templateUrl}
     alt=""
-    on:load={() => draw(slots)}
+    on:load={() => (dirty = true)}
     bind:this={templateImage}
 />
 
