@@ -20,5 +20,4 @@ export interface Slot {
     dynamic?: string;
     pos: Pos;
     images: SlotImage[];
-    dirty?: boolean;
 }

@@ -1,40 +1,20 @@
-<script lang="ts" context="module">
-    function resize(image: CanvasImageSource, width: number, height: number) {
-        let resizeCanvas = document.createElement("canvas");
-        resizeCanvas.width = width;
-        resizeCanvas.height = height;
-        resizeCanvas.getContext("2d").drawImage(image, 0, 0, width, height);
-        return resizeCanvas;
-    }
-
-    const maskPath = new Path2D(
-        "M18 9.55385e-06C6 -0.00873929 0 5.99126 0 18C0 30.0088 0 63.0088 0 117L78 162L114 162L114 18C114 6.00001 108 9.55385e-06 96 9.55385e-06C78 9.55385e-06 77.7324 0.348435 18 9.55385e-06Z"
-    );
-
-    const cachedImage = new WeakMap<
-        HTMLImageElement,
-        { image: HTMLCanvasElement; rect: Rect }
-    >();
-    const cachedSlot = new Map<string, HTMLCanvasElement>();
-</script>
-
 <script lang="ts">
     import Resizer from "./lib/Resizer.svelte";
     import templateUrl from "./assets/template.png";
-    import type { Rect, Slot } from "./lib/types";
+    import maskUrl from "./assets/mask.png";
+    import type { Slot } from "./lib/types";
     import ImageList from "./lib/ImageList.svelte";
-    import { onDestroy, onMount } from "svelte";
+    import {
+        Application,
+        Loader,
+        Sprite,
+        Graphics,
+        Container,
+        Text,
+    } from "svelte-pixi";
+    import * as PIXI from "pixi.js";
 
-    let templateImage: HTMLImageElement;
-
-    let canvas: HTMLCanvasElement;
-
-    let saveImage: string | undefined = undefined;
-
-    let dirty = true;
-    let drawing = false;
-
-    $: if (slots) dirty = true;
+    let slotMasks = [];
 
     let slots: Slot[] = [
         {
@@ -115,123 +95,100 @@
         },
     ];
 
+    const white = PIXI.utils.string2hex("#ffffff");
+
     let selectedSlot: number | undefined = undefined;
     let selectedImage: number | undefined = undefined;
 
-    function wait(): Promise<void> {
-        return new Promise((res) => setTimeout(res));
+    let pixiApp: PIXI.Application;
+
+    function exportImage() {
+        let extract = new PIXI.Extract(pixiApp.renderer as PIXI.Renderer);
+        let base64 = extract.base64(pixiApp.stage, "image/jpeg");
+        let a = document.createElement("a");
+        a.download = "ouput.jpg";
+        a.href = base64;
+        a.click();
     }
-
-    async function draw(slots: Slot[]) {
-        if (drawing) return;
-        dirty = false;
-        drawing = true;
-        let tempCanvas = document.createElement("canvas");
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        let ctx = tempCanvas.getContext("2d");
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, 680, 680);
-        for (let slot of slots) {
-            if (!slot.images.length) continue;
-            ctx.resetTransform();
-            ctx.translate(slot.pos.x, slot.pos.y);
-            if (slot.dirty || !cachedSlot.has(slot.name)) {
-                let slotCanvas = document.createElement("canvas");
-                slotCanvas.width = 114;
-                slotCanvas.height = 162;
-                let slotCtx = slotCanvas.getContext("2d");
-                for (let image of [...slot.images].reverse()) {
-                    let cached = cachedImage.get(image.image);
-                    if (
-                        !cached ||
-                        cached.rect.width !== image.rect.width ||
-                        cached.rect.height !== image.rect.height
-                    ) {
-                        let temp = resize(
-                            image.image,
-                            (image.image.width + image.rect.width) / 2,
-                            (image.image.height + image.rect.height) / 2
-                        );
-                        await wait();
-                        cachedImage.set(
-                            image.image,
-                            (cached = {
-                                image: resize(
-                                    temp,
-                                    image.rect.width,
-                                    image.rect.height
-                                ),
-                                rect: { ...image.rect },
-                            })
-                        );
-                    }
-                    slotCtx.drawImage(cached.image, image.pos.x, image.pos.y);
-                    await wait();
-                }
-                cachedSlot.set(slot.name, slotCanvas);
-                slot.dirty = false;
-            }
-            ctx.save();
-            ctx.clip(maskPath);
-            ctx.drawImage(cachedSlot.get(slot.name), 0, 0);
-            ctx.restore();
-            await wait();
-        }
-        ctx.resetTransform();
-        ctx.drawImage(templateImage, 0, 0);
-        for (let slot of slots) {
-            if (!slot.dynamic) continue;
-            ctx.resetTransform();
-            ctx.translate(slot.pos.x, slot.pos.y);
-            ctx.textAlign = "center";
-            ctx.textBaseline = "alphabetic";
-            ctx.fillStyle = "black";
-            ctx.font =
-                '14px "Noto Sans TC", "Noto Sans SC", "Noto Sans JP", sans-serif';
-            let testWidth = ctx.measureText(slot.dynamic).width;
-            let x = 66;
-            if (testWidth > 64) {
-                ctx.textAlign = "left";
-                x = 34;
-            }
-            ctx.fillText(slot.dynamic, x, 184);
-        }
-        canvas.getContext("2d").drawImage(tempCanvas, 0, 0);
-        saveImage = canvas.toDataURL("image/jpeg");
-        drawing = false;
-    }
-
-    let interval: NodeJS.Timer;
-
-    onMount(() => {
-        interval = setInterval(() => {
-            if (dirty) draw(slots);
-        }, 10);
-    });
-
-    onDestroy(() => {
-        clearInterval(interval);
-    });
 </script>
-
-<img
-    class="hidden"
-    src={templateUrl}
-    alt=""
-    on:load={() => (dirty = true)}
-    bind:this={templateImage}
-/>
 
 <div class="flex h-screen w-screen flex-col items-center justify-center gap-4">
     <div class="flex flex-row shadow-lg">
-        <div class="template select-none">
-            <canvas
-                class="absolute"
-                bind:this={canvas}
-                width="680"
-                height="680"
-            />
+        <div class="template">
+            <Application
+                width={680}
+                height={680}
+                backgroundColor={white}
+                render={"demand"}
+                bind:instance={pixiApp}
+                antialias={true}
+            >
+                <Loader resources={[templateUrl, maskUrl]}>
+                    <Graphics
+                        draw={(g) => {
+                            g.beginFill(white);
+                            g.drawRect(0, 0, 680, 680);
+                            g.endFill();
+                        }}
+                        zIndex={0}
+                    />
+                    {#each slots as slot, index}
+                        <Container
+                            mask={slotMasks[index]}
+                            x={slot.pos.x}
+                            y={slot.pos.y}
+                        >
+                            <Sprite
+                                texture={PIXI.Texture.from(maskUrl)}
+                                x={-2}
+                                y={-2}
+                                bind:instance={slotMasks[index]}
+                            />
+                            {#each [...slot.images].reverse() as image}
+                                <Sprite
+                                    texture={new PIXI.Texture(
+                                        new PIXI.BaseTexture(image.image)
+                                    )}
+                                    x={image.pos.x}
+                                    y={image.pos.y}
+                                    width={image.rect.width}
+                                    height={image.rect.height}
+                                />
+                            {/each}
+                        </Container>
+                    {/each}
+                    <Sprite
+                        texture={PIXI.Texture.from(templateUrl)}
+                        width={680}
+                        height={680}
+                        zIndex={2}
+                    />
+                    {#each slots as slot, index}
+                        {#if slot.dynamic}
+                            <Container x={slot.pos.x} y={slot.pos.y}>
+                                <Text
+                                    text={slot.dynamic}
+                                    x={34}
+                                    y={169}
+                                    style={{
+                                        fill: 0,
+                                        fontFamily: [
+                                            "Noto Sans TC",
+                                            "Noto Sans SC",
+                                            "Noto Sans JP",
+                                            "sans-serif",
+                                        ],
+                                        fontSize: 16,
+                                        fontWeight: "600",
+                                        align: "center",
+                                        textBaseline: "alphabetic",
+                                    }}
+                                />
+                            </Container>
+                        {/if}
+                    {/each}
+                </Loader>
+            </Application>
             {#each slots as slot, index}
                 <div
                     class="slot"
@@ -276,9 +233,6 @@
                                     .image.width /
                                     slots[selectedSlot].images[selectedImage]
                                         .image.height}
-                                on:update={() => {
-                                    slots[selectedSlot].dirty = true;
-                                }}
                             />
                         {/if}
                     {/if}
@@ -295,13 +249,9 @@
                     />
                 {/if}
             </div>
-            <a
-                href={saveImage}
-                download="output.jpg"
-                target="_blank"
-                rel="noreferrer"
+            <button
                 class="bg-slate-400 p-2 text-center text-lg font-bold text-white"
-                >保存</a
+                on:click={exportImage}>保存</button
             >
         </div>
     </div>

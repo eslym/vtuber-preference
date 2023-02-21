@@ -37,7 +37,6 @@
                 };
                 selectedImage = 0;
                 slot.images = [img, ...slot.images];
-                slot.dirty = true;
             };
             image.src = reader.result as string;
         };
@@ -122,7 +121,6 @@
                     on:dragstart={(event) => dragStart(event, index)}
                     on:dragend={() => {
                         dragging = false;
-                        setTimeout(() => (slot.dirty = true));
                     }}
                     class="flex w-0 flex-grow items-center gap-4 overflow-hidden"
                     draggable="true"
@@ -141,7 +139,6 @@
                     class="h-10 w-10 bg-slate-500 font-bold text-white"
                     on:click={() => {
                         slot.images = slot.images.filter((i) => i !== image);
-                        slot.dirty = true;
                         selectedImage =
                             selectedImage > index
                                 ? selectedImage - 1
