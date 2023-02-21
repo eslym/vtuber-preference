@@ -1,6 +1,7 @@
 <script lang="ts">
     import Resizer from "./lib/Resizer.svelte";
     import templateUrl from "./assets/template.png";
+    import bgUrl from "./assets/white-bg.jpg";
     import maskUrl from "./assets/mask.png";
     import type { Slot } from "./lib/types";
     import ImageList from "./lib/ImageList.svelte";
@@ -15,6 +16,7 @@
     import * as PIXI from "pixi.js";
 
     let slotMasks = [];
+    let previewMasks = [];
 
     let slots: Slot[] = [
         {
@@ -102,6 +104,27 @@
 
     let pixiApp: PIXI.Application;
 
+    let invert = new PIXI.filters.ColorMatrixFilter();
+    invert.negative(true);
+
+    function makeMask() {
+        if (!previewMasks[selectedSlot]) {
+            let slot = slots[selectedSlot];
+            let mask = new PIXI.Container();
+            mask.addChild(new PIXI.Sprite(PIXI.Texture.from(bgUrl)));
+            let s = mask.addChild(new PIXI.Sprite(PIXI.Texture.from(maskUrl)));
+            s.filters = [invert];
+            s.x = slot.pos.x - 2;
+            s.y = slot.pos.y - 2;
+            previewMasks[selectedSlot] = new PIXI.Sprite(
+                pixiApp.renderer.generateTexture(mask)
+            );
+        }
+        return previewMasks[selectedSlot];
+    }
+
+    $: previewMask = pixiApp && selectedSlot !== undefined ? makeMask() : null;
+
     function exportImage() {
         let extract = new PIXI.Extract(pixiApp.renderer as PIXI.Renderer);
         let base64 = extract.base64(pixiApp.stage, "image/jpeg");
@@ -119,25 +142,13 @@
                 width={680}
                 height={680}
                 backgroundColor={white}
-                render={"demand"}
                 bind:instance={pixiApp}
                 antialias={true}
             >
-                <Loader resources={[templateUrl, maskUrl]}>
-                    <Graphics
-                        draw={(g) => {
-                            g.beginFill(white);
-                            g.drawRect(0, 0, 680, 680);
-                            g.endFill();
-                        }}
-                        zIndex={0}
-                    />
+                <Loader resources={[templateUrl, bgUrl, maskUrl]}>
+                    <Sprite texture={PIXI.Texture.from(bgUrl)} />
                     {#each slots as slot, index}
-                        <Container
-                            mask={slotMasks[index]}
-                            x={slot.pos.x}
-                            y={slot.pos.y}
-                        >
+                        <Container mask={slotMasks[index]} {...slot.pos}>
                             <Sprite
                                 texture={PIXI.Texture.from(maskUrl)}
                                 x={-2}
@@ -149,10 +160,8 @@
                                     texture={new PIXI.Texture(
                                         new PIXI.BaseTexture(image.image)
                                     )}
-                                    x={image.pos.x}
-                                    y={image.pos.y}
-                                    width={image.rect.width}
-                                    height={image.rect.height}
+                                    {...image.pos}
+                                    {...image.rect}
                                 />
                             {/each}
                         </Container>
@@ -161,11 +170,10 @@
                         texture={PIXI.Texture.from(templateUrl)}
                         width={680}
                         height={680}
-                        zIndex={2}
                     />
-                    {#each slots as slot, index}
+                    {#each slots as slot}
                         {#if slot.dynamic}
-                            <Container x={slot.pos.x} y={slot.pos.y}>
+                            <Container {...slot.pos}>
                                 <Text
                                     text={slot.dynamic}
                                     x={34}
@@ -187,6 +195,20 @@
                             </Container>
                         {/if}
                     {/each}
+                    <Container mask={previewMask} alpha={0.45}>
+                        {#if selectedSlot !== undefined && selectedImage !== undefined}
+                            {@const slot = slots[selectedSlot]}
+                            {@const image = slot.images[selectedImage]}
+                            <Sprite
+                                texture={new PIXI.Texture(
+                                    new PIXI.BaseTexture(image.image)
+                                )}
+                                x={slot.pos.x + image.pos.x}
+                                y={slot.pos.y + image.pos.y}
+                                {...image.rect}
+                            />
+                        {/if}
+                    </Container>
                 </Loader>
             </Application>
             {#each slots as slot, index}
