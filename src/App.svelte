@@ -5,14 +5,7 @@
     import maskUrl from "./assets/mask.png";
     import type { Slot } from "./lib/types";
     import ImageList from "./lib/ImageList.svelte";
-    import {
-        Application,
-        Loader,
-        Sprite,
-        Graphics,
-        Container,
-        Text,
-    } from "svelte-pixi";
+    import { Application, Loader, Sprite, Container, Text } from "svelte-pixi";
     import * as PIXI from "pixi.js";
 
     let slotMasks = [];
@@ -129,7 +122,7 @@
         let extract = new PIXI.Extract(pixiApp.renderer as PIXI.Renderer);
         let base64 = extract.base64(pixiApp.stage, "image/jpeg");
         let a = document.createElement("a");
-        a.download = "ouput.jpg";
+        a.download = "output.jpg";
         a.href = base64;
         a.click();
     }
