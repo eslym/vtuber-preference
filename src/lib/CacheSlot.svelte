@@ -4,7 +4,7 @@
     import { Container, getApp, Sprite } from "svelte-pixi";
     import { isEqual } from "lodash";
 
-    export let appSlot: Slot;
+    export let renderSlot: Slot;
     export let selectedLayer: number | undefined;
 
     let state: { selected?: number; layers?: string[] } = {};
@@ -23,11 +23,11 @@
 
     $: selectedSize =
         selectedLayer !== undefined
-            ? appSlot.layers[selectedLayer].rect
+            ? renderSlot.layers[selectedLayer].rect
             : undefined;
 
     $: if (selectedLayer !== undefined) {
-        cachedTextures.delete(appSlot.layers[selectedLayer].image);
+        cachedTextures.delete(renderSlot.layers[selectedLayer].image);
         cachedSize = { width: -1, height: -1 };
         cachedSizedSelected = undefined;
     }
@@ -51,30 +51,32 @@
     $: if (
         !isEqual(state, {
             selected: selectedLayer,
-            layers: appSlot.layers.map((l) => l.image.src),
+            layers: renderSlot.layers.map((l) => l.image.src),
         })
     ) {
         state = {
             selected: selectedLayer,
-            layers: appSlot.layers.map((l) => l.image.src),
+            layers: renderSlot.layers.map((l) => l.image.src),
         };
         selectedTextrue =
             selectedLayer !== undefined
                 ? new PIXI.Texture(
-                      new PIXI.BaseTexture(appSlot.layers[selectedLayer].image)
+                      new PIXI.BaseTexture(
+                          renderSlot.layers[selectedLayer].image
+                      )
                   )
                 : undefined;
         lowerHalf =
             selectedLayer !== undefined
-                ? cacheLayers(appSlot.layers.slice(selectedLayer + 1))
+                ? cacheLayers(renderSlot.layers.slice(selectedLayer + 1))
                 : undefined;
         upperHalf =
             selectedLayer !== undefined
-                ? cacheLayers(appSlot.layers.slice(0, selectedLayer))
+                ? cacheLayers(renderSlot.layers.slice(0, selectedLayer))
                 : undefined;
         fullCache =
             selectedLayer === undefined
-                ? cacheLayers(appSlot.layers)
+                ? cacheLayers(renderSlot.layers)
                 : undefined;
     }
 
@@ -90,7 +92,7 @@
             cachedTextures.set(
                 layer.image,
                 app.renderer.generateTexture(sprite, {
-                    scaleMode: PIXI.SCALE_MODES.NEAREST,
+                    scaleMode: PIXI.SCALE_MODES.LINEAR,
                     region: new PIXI.Rectangle(0, 0, 117, 166),
                 })
             );
@@ -115,7 +117,7 @@
         <Sprite texture={lowerHalf} />
         <Sprite
             texture={cachedSizedSelected}
-            {...appSlot.layers[selectedLayer].pos}
+            {...renderSlot.layers[selectedLayer].pos}
         />
         <Sprite texture={upperHalf} />
     </Container>

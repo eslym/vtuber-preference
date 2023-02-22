@@ -27,7 +27,7 @@
         cachedSprite.width = width;
         cachedSprite.height = height;
         cachedTexture = app.renderer.generateTexture(cachedSprite, {
-            scaleMode: PIXI.SCALE_MODES.NEAREST,
+            scaleMode: PIXI.SCALE_MODES.LINEAR,
             region: new PIXI.Rectangle(0, 0, width, height),
         });
     }

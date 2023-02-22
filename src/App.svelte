@@ -156,7 +156,7 @@
                                 bind:instance={slotMasks[index]}
                             />
                             <CacheSlot
-                                appSlot={slot}
+                                renderSlot={slot}
                                 selectedLayer={selectedSlot === index
                                     ? selectedLayer
                                     : undefined}
