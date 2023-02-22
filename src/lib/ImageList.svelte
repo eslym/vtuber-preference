@@ -163,7 +163,7 @@
         {/each}
         <button
             class="block p-0.5 hover:bg-gray-300 active:bg-gray-200"
-            on:click={() => input.click()}>添加圖片</button
+            on:click|stopPropagation={() => input.click()}>添加圖片</button
         >
     </div>
 </div>
