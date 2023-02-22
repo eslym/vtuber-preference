@@ -7,6 +7,9 @@
     import ImageList from "./lib/ImageList.svelte";
     import { Application, Loader, Sprite, Container, Text } from "svelte-pixi";
     import * as PIXI from "pixi.js";
+    import CachedResizeSprite from "./lib/CachedResizeSprite.svelte";
+    import { tick } from "svelte";
+    import CacheSlot from "./lib/CacheSlot.svelte";
 
     let slotMasks = [];
     let previewMasks = [];
@@ -15,85 +18,85 @@
         {
             name: "第一個看的",
             pos: { x: 48, y: 48 },
-            images: [],
+            layers: [],
         },
         {
             name: "最常看的",
             pos: { x: 166, y: 48 },
-            images: [],
+            layers: [],
         },
         {
             name: "最佳節目",
             pos: { x: 283, y: 48 },
-            images: [],
+            layers: [],
         },
         {
             name: "最瘋狂的",
             pos: { x: 401, y: 48 },
-            images: [],
+            layers: [],
         },
         {
             name: "最療愈的",
             pos: { x: 519, y: 48 },
-            images: [],
+            layers: [],
         },
         {
             name: "聲音最好聽的",
             pos: { x: 48, y: 248 },
-            images: [],
+            layers: [],
         },
         {
             name: "唱歌最好聽的",
             pos: { x: 166, y: 248 },
-            images: [],
+            layers: [],
         },
         {
             name: "最喜歡的",
             pos: { x: 283, y: 248 },
-            images: [],
+            layers: [],
         },
         {
             name: "影響最深遠的",
             pos: { x: 401, y: 248 },
-            images: [],
+            layers: [],
         },
         {
             name: "最漂亮的",
             pos: { x: 519, y: 248 },
-            images: [],
+            layers: [],
         },
         {
             name: "最想犯罪的",
             pos: { x: 48, y: 448 },
-            images: [],
+            layers: [],
         },
         {
             name: "最帥的",
             pos: { x: 166, y: 448 },
-            images: [],
+            layers: [],
         },
         {
             name: "最想推廣的",
             pos: { x: 283, y: 448 },
-            images: [],
+            layers: [],
         },
         {
             name: "最婆的",
             pos: { x: 401, y: 448 },
-            images: [],
+            layers: [],
         },
         {
             name: "最",
             pos: { x: 519, y: 448 },
             dynamic: "",
-            images: [],
+            layers: [],
         },
     ];
 
     const white = PIXI.utils.string2hex("#ffffff");
 
     let selectedSlot: number | undefined = undefined;
-    let selectedImage: number | undefined = undefined;
+    let selectedLayer: number | undefined = undefined;
 
     let pixiApp: PIXI.Application;
 
@@ -118,7 +121,10 @@
 
     $: previewMask = pixiApp && selectedSlot !== undefined ? makeMask() : null;
 
-    function exportImage() {
+    async function exportImage() {
+        selectedSlot = undefined;
+        selectedLayer = undefined;
+        await tick();
         let extract = new PIXI.Extract(pixiApp.renderer as PIXI.Renderer);
         let base64 = extract.base64(pixiApp.stage, "image/jpeg");
         let a = document.createElement("a");
@@ -137,10 +143,11 @@
                 backgroundColor={white}
                 bind:instance={pixiApp}
                 antialias={true}
+                render={"demand"}
             >
                 <Loader resources={[templateUrl, bgUrl, maskUrl]}>
                     <Sprite texture={PIXI.Texture.from(bgUrl)} />
-                    {#each slots as slot, index}
+                    {#each slots as slot, index (slot.name)}
                         <Container mask={slotMasks[index]} {...slot.pos}>
                             <Sprite
                                 texture={PIXI.Texture.from(maskUrl)}
@@ -148,15 +155,12 @@
                                 y={-2}
                                 bind:instance={slotMasks[index]}
                             />
-                            {#each [...slot.images].reverse() as image}
-                                <Sprite
-                                    texture={new PIXI.Texture(
-                                        new PIXI.BaseTexture(image.image)
-                                    )}
-                                    {...image.pos}
-                                    {...image.rect}
-                                />
-                            {/each}
+                            <CacheSlot
+                                appSlot={slot}
+                                selectedLayer={selectedSlot === index
+                                    ? selectedLayer
+                                    : undefined}
+                            />
                         </Container>
                     {/each}
                     <Sprite
@@ -188,11 +192,12 @@
                             </Container>
                         {/if}
                     {/each}
-                    <Container mask={previewMask} alpha={0.45}>
-                        {#if selectedSlot !== undefined && selectedImage !== undefined}
+                    <Container mask={previewMask} alpha={0.75}>
+                        {#if selectedSlot !== undefined && selectedLayer !== undefined}
                             {@const slot = slots[selectedSlot]}
-                            {@const image = slot.images[selectedImage]}
-                            <Sprite
+                            {@const image = slot.layers[selectedLayer]}
+                            <Sprite texture={PIXI.Texture.from(bgUrl)} />
+                            <CachedResizeSprite
                                 texture={new PIXI.Texture(
                                     new PIXI.BaseTexture(image.image)
                                 )}
@@ -215,38 +220,38 @@
                             class="block h-full w-full"
                             on:click={() => {
                                 selectedSlot = index;
-                                selectedImage = undefined;
+                                selectedLayer = undefined;
                             }}
                         />
                     {:else}
-                        {#each [...slot.images].reverse() as image, index (image.image)}
+                        {#each [...slot.layers].reverse() as image, index (image.image)}
                             <div
                                 class="absolute z-10"
                                 on:mousedown={() =>
-                                    (selectedImage =
-                                        slot.images.length - index - 1)}
+                                    (selectedLayer =
+                                        slot.layers.length - index - 1)}
                                 style="top:{image.pos.y}px;left:{image.pos
                                     .x}px;width:{image.rect
                                     .width}px;height:{image.rect.height}px"
                             />
                         {/each}
-                        {#if selectedImage !== undefined}
+                        {#if selectedLayer !== undefined}
                             <Resizer
-                                bind:x={slots[selectedSlot].images[
-                                    selectedImage
+                                bind:x={slots[selectedSlot].layers[
+                                    selectedLayer
                                 ].pos.x}
-                                bind:y={slots[selectedSlot].images[
-                                    selectedImage
+                                bind:y={slots[selectedSlot].layers[
+                                    selectedLayer
                                 ].pos.y}
-                                bind:width={slots[selectedSlot].images[
-                                    selectedImage
+                                bind:width={slots[selectedSlot].layers[
+                                    selectedLayer
                                 ].rect.width}
-                                bind:height={slots[selectedSlot].images[
-                                    selectedImage
+                                bind:height={slots[selectedSlot].layers[
+                                    selectedLayer
                                 ].rect.height}
-                                ratio={slots[selectedSlot].images[selectedImage]
+                                ratio={slots[selectedSlot].layers[selectedLayer]
                                     .image.width /
-                                    slots[selectedSlot].images[selectedImage]
+                                    slots[selectedSlot].layers[selectedLayer]
                                         .image.height}
                             />
                         {/if}
@@ -259,7 +264,7 @@
                 {#if selectedSlot !== undefined}
                     <ImageList
                         bind:slot={slots[selectedSlot]}
-                        bind:selectedImage
+                        bind:selectedLayer
                         bind:selectedSlot
                     />
                 {/if}

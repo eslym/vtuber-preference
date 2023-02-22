@@ -1,8 +1,8 @@
 <script lang="ts">
-    import type { Slot, SlotImage } from "./types";
+    import type { Slot, SlotLayer } from "./types";
 
     export let slot: Slot;
-    export let selectedImage: number | undefined;
+    export let selectedLayer: number | undefined;
     export let selectedSlot: number;
 
     let input: HTMLInputElement;
@@ -26,7 +26,7 @@
                     rect.width /= rate;
                     rect.height /= rate;
                 }
-                let img: SlotImage = {
+                let img: SlotLayer = {
                     name: file.name,
                     image: image,
                     pos: {
@@ -35,8 +35,8 @@
                     },
                     rect,
                 };
-                selectedImage = 0;
-                slot.images = [img, ...slot.images];
+                selectedLayer = 0;
+                slot.layers = [img, ...slot.layers];
             };
             image.src = reader.result as string;
         };
@@ -51,7 +51,7 @@
         let div = (event.target as HTMLDivElement).parentElement;
         event.dataTransfer.dropEffect = "move";
         event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.setData("text/plain", slot.images[index].name);
+        event.dataTransfer.setData("text/plain", slot.layers[index].name);
         event.dataTransfer.setDragImage(
             div,
             div.clientWidth / 2,
@@ -62,13 +62,13 @@
     function dragOver(event: DragEvent, index: number) {
         if (dragging === false) return;
         event.preventDefault();
-        let data = slot.images[dragging];
-        let swap = slot.images[index];
-        slot.images[index] = data;
-        slot.images[dragging] = swap;
+        let data = slot.layers[dragging];
+        let swap = slot.layers[index];
+        slot.layers[index] = data;
+        slot.layers[dragging] = swap;
         dragging = index;
         event.dataTransfer.dropEffect = "move";
-        selectedImage = index;
+        selectedLayer = index;
     }
 </script>
 
@@ -80,7 +80,7 @@
             class="p-2"
             on:click={() => {
                 selectedSlot = (15 + selectedSlot - 1) % 15;
-                selectedImage = undefined;
+                selectedLayer = undefined;
             }}>＜</button
         >
         {#if slot.dynamic === undefined}
@@ -97,7 +97,7 @@
             class="p-2"
             on:click={() => {
                 selectedSlot = (selectedSlot + 1) % 15;
-                selectedImage = undefined;
+                selectedLayer = undefined;
             }}>＞</button
         >
     </div>
@@ -110,11 +110,11 @@
                 on:change={addImage}
             />
         </form>
-        {#each slot.images as image, index (image.image)}
+        {#each slot.layers as layer, index (layer.image)}
             <div
                 class="flex select-none flex-row items-center gap-4"
-                class:bg-slate-300={selectedImage === index}
-                on:mousedown={() => (selectedImage = index)}
+                class:bg-slate-300={selectedLayer === index}
+                on:mousedown={() => (selectedLayer = index)}
                 on:dragover={(event) => dragOver(event, index)}
             >
                 <div
@@ -127,23 +127,23 @@
                 >
                     <img
                         draggable="false"
-                        alt={image.name}
-                        src={image.image.src}
+                        alt={layer.name}
+                        src={layer.image.src}
                         class="h-10 w-10 object-cover"
                     />
                     <div class="w-0 flex-grow">
-                        {image.name}
+                        {layer.name}
                     </div>
                 </div>
                 <button
                     class="h-10 w-10 bg-slate-500 font-bold text-white"
                     on:click={() => {
-                        slot.images = slot.images.filter((i) => i !== image);
-                        selectedImage =
-                            selectedImage > index
-                                ? selectedImage - 1
-                                : selectedImage < index
-                                ? selectedImage
+                        slot.layers = slot.layers.filter((l) => l !== layer);
+                        selectedLayer =
+                            selectedLayer > index
+                                ? selectedLayer - 1
+                                : selectedLayer < index
+                                ? selectedLayer
                                 : undefined;
                     }}>Ｘ</button
                 >

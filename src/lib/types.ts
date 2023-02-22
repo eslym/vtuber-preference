@@ -8,7 +8,7 @@ export interface Pos {
     y: number;
 }
 
-export interface SlotImage {
+export interface SlotLayer {
     name: string;
     image: HTMLImageElement;
     rect: Rect;
@@ -19,5 +19,5 @@ export interface Slot {
     name: string;
     dynamic?: string;
     pos: Pos;
-    images: SlotImage[];
+    layers: SlotLayer[];
 }
