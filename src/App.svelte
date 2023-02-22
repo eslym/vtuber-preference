@@ -1,7 +1,6 @@
 <script lang="ts">
     import Resizer from "./lib/Resizer.svelte";
     import templateUrl from "./assets/template.png";
-    import bgUrl from "./assets/white-bg.jpg";
     import maskUrl from "./assets/mask.png";
     import type { Slot } from "./lib/types";
     import ImageList from "./lib/ImageList.svelte";
@@ -10,6 +9,7 @@
     import CachedResizeSprite from "./lib/CachedResizeSprite.svelte";
     import { tick } from "svelte";
     import CacheSlot from "./lib/CacheSlot.svelte";
+    import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
 
     let slotMasks = [];
     let previewMasks = [];
@@ -100,16 +100,15 @@
 
     let pixiApp: PIXI.Application;
 
-    let invert = new PIXI.filters.ColorMatrixFilter();
-    invert.negative(true);
-
     function makeMask() {
         if (!previewMasks[selectedSlot]) {
             let slot = slots[selectedSlot];
             let mask = new PIXI.Container();
-            mask.addChild(new PIXI.Sprite(PIXI.Texture.from(bgUrl)));
+            let bg = mask.addChild(new PIXI.Sprite(PIXI.Texture.WHITE));
+            bg.width = 680;
+            bg.height = 680;
             let s = mask.addChild(new PIXI.Sprite(PIXI.Texture.from(maskUrl)));
-            s.filters = [invert];
+            s.filters = [new ColorOverlayFilter(0)];
             s.x = slot.pos.x - 2;
             s.y = slot.pos.y - 2;
             previewMasks[selectedSlot] = new PIXI.Sprite(
@@ -122,7 +121,6 @@
     $: previewMask = pixiApp && selectedSlot !== undefined ? makeMask() : null;
 
     async function exportImage() {
-        selectedSlot = undefined;
         selectedLayer = undefined;
         await tick();
         let extract = new PIXI.Extract(pixiApp.renderer as PIXI.Renderer);
@@ -145,8 +143,12 @@
                 antialias={true}
                 render={"demand"}
             >
-                <Loader resources={[templateUrl, bgUrl, maskUrl]}>
-                    <Sprite texture={PIXI.Texture.from(bgUrl)} />
+                <Loader resources={[templateUrl, maskUrl]}>
+                    <Sprite
+                        texture={PIXI.Texture.WHITE}
+                        width={680}
+                        height={680}
+                    />
                     {#each slots as slot, index (slot.name)}
                         <Container mask={slotMasks[index]} {...slot.pos}>
                             <Sprite
@@ -192,15 +194,21 @@
                             </Container>
                         {/if}
                     {/each}
-                    <Container mask={previewMask} alpha={0.75}>
+                    <Container mask={previewMask} alpha={0.8}>
                         {#if selectedSlot !== undefined && selectedLayer !== undefined}
                             {@const slot = slots[selectedSlot]}
                             {@const image = slot.layers[selectedLayer]}
-                            <Sprite texture={PIXI.Texture.from(bgUrl)} />
+                            <Sprite
+                                texture={PIXI.Texture.WHITE}
+                                width={680}
+                                height={680}
+                                filters={[new ColorOverlayFilter(0)]}
+                            />
                             <CachedResizeSprite
                                 texture={new PIXI.Texture(
                                     new PIXI.BaseTexture(image.image)
                                 )}
+                                alpha={0.6}
                                 x={slot.pos.x + image.pos.x}
                                 y={slot.pos.y + image.pos.y}
                                 {...image.rect}

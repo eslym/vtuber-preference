@@ -82,9 +82,8 @@
 
     function getTexture(layer: SlotLayer) {
         if (!cachedTextures.has(layer.image)) {
-            let sprite = new PIXI.Sprite(
-                new PIXI.Texture(new PIXI.BaseTexture(layer.image))
-            );
+            let texture = new PIXI.Texture(new PIXI.BaseTexture(layer.image));
+            let sprite = new PIXI.Sprite(texture);
             sprite.x = layer.pos.x;
             sprite.y = layer.pos.y;
             sprite.width = layer.rect.width;
@@ -94,6 +93,7 @@
                 app.renderer.generateTexture(sprite, {
                     scaleMode: PIXI.SCALE_MODES.LINEAR,
                     region: new PIXI.Rectangle(0, 0, 117, 166),
+                    multisample: PIXI.MSAA_QUALITY.HIGH,
                 })
             );
         }

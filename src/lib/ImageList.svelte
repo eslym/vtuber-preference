@@ -105,7 +105,7 @@
         <form class="hidden" bind:this={form}>
             <input
                 type="file"
-                accept=".jpg,.jpeg,.png,.bmp"
+                accept=".jpg,.jpeg,.png,.bmp,.webp"
                 bind:this={input}
                 on:change={addImage}
             />
@@ -122,7 +122,7 @@
                     on:dragend={() => {
                         dragging = false;
                     }}
-                    class="flex w-0 flex-grow items-center gap-4 overflow-hidden"
+                    class="flex w-0 flex-grow items-center gap-2 overflow-hidden"
                     draggable="true"
                 >
                     <img
@@ -131,7 +131,9 @@
                         src={layer.image.src}
                         class="h-10 w-10 object-cover"
                     />
-                    <div class="w-0 flex-grow">
+                    <div
+                        class="w-0 flex-grow overflow-hidden whitespace-nowrap"
+                    >
                         {layer.name}
                     </div>
                 </div>
