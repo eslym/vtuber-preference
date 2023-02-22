@@ -1,5 +1,7 @@
 <script lang="ts">
     import type { Slot, SlotLayer } from "./types";
+    import ColorPicker from "svelte-awesome-color-picker";
+    import PickerInput from "./PickerInput.svelte";
 
     export let slot: Slot;
     export let selectedLayer: number | undefined;
@@ -100,6 +102,14 @@
                 selectedLayer = undefined;
             }}>＞</button
         >
+    </div>
+    <div>
+        <ColorPicker
+            bind:hex={slot.background}
+            isAlpha={false}
+            label="背景色"
+            components={{ input: PickerInput }}
+        />
     </div>
     <div class="flex h-0 flex-grow flex-col gap-2 p-4">
         <form class="hidden" bind:this={form}>

@@ -17,76 +17,91 @@
     let slots: Slot[] = [
         {
             name: "第一個看的",
+            background: "#ffffff",
             pos: { x: 48, y: 48 },
             layers: [],
         },
         {
             name: "最常看的",
+            background: "#ffffff",
             pos: { x: 166, y: 48 },
             layers: [],
         },
         {
             name: "最佳節目",
+            background: "#ffffff",
             pos: { x: 283, y: 48 },
             layers: [],
         },
         {
             name: "最瘋狂的",
+            background: "#ffffff",
             pos: { x: 401, y: 48 },
             layers: [],
         },
         {
             name: "最療愈的",
+            background: "#ffffff",
             pos: { x: 519, y: 48 },
             layers: [],
         },
         {
             name: "聲音最好聽的",
+            background: "#ffffff",
             pos: { x: 48, y: 248 },
             layers: [],
         },
         {
             name: "唱歌最好聽的",
+            background: "#ffffff",
             pos: { x: 166, y: 248 },
             layers: [],
         },
         {
             name: "最喜歡的",
+            background: "#ffffff",
             pos: { x: 283, y: 248 },
             layers: [],
         },
         {
             name: "影響最深遠的",
+            background: "#ffffff",
             pos: { x: 401, y: 248 },
             layers: [],
         },
         {
             name: "最漂亮的",
+            background: "#ffffff",
             pos: { x: 519, y: 248 },
             layers: [],
         },
         {
             name: "最想犯罪的",
+            background: "#ffffff",
             pos: { x: 48, y: 448 },
             layers: [],
         },
         {
             name: "最帥的",
+            background: "#ffffff",
             pos: { x: 166, y: 448 },
             layers: [],
         },
         {
             name: "最想推廣的",
+            background: "#ffffff",
             pos: { x: 283, y: 448 },
             layers: [],
         },
         {
             name: "最婆的",
+            background: "#ffffff",
             pos: { x: 401, y: 448 },
             layers: [],
         },
         {
             name: "最",
+            background: "#ffffff",
             pos: { x: 519, y: 448 },
             dynamic: "",
             layers: [],
@@ -156,6 +171,16 @@
                                 x={-2}
                                 y={-2}
                                 bind:instance={slotMasks[index]}
+                            />
+                            <Sprite
+                                texture={PIXI.Texture.WHITE}
+                                filters={[
+                                    new ColorOverlayFilter(
+                                        PIXI.utils.string2hex(slot.background)
+                                    ),
+                                ]}
+                                width={117}
+                                height={166}
                             />
                             <CacheSlot
                                 renderSlot={slot}
