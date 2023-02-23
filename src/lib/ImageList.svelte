@@ -88,11 +88,10 @@
         {#if slot.dynamic === undefined}
             <div class="w-0 flex-grow px-4 py-2">{slot.name}</div>
         {:else}
-            <div class="py-2 pl-4">{slot.name}</div>
             <input
                 bind:value={slot.dynamic}
-                class="w-0 flex-grow bg-transparent py-2 pr-4 font-normal text-slate-200 underline-offset-4 placeholder:text-slate-400 placeholder:underline focus:outline-none"
-                placeholder="(自行输入)　　　　　　　　　　　　　　　　　　　　"
+                class="w-0 flex-grow bg-transparent py-2 px-4 font-normal text-slate-200 underline-offset-4 placeholder:text-slate-400 placeholder:underline focus:outline-none"
+                placeholder={slot.name}
             />
         {/if}
         <button

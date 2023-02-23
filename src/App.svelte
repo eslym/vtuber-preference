@@ -10,6 +10,7 @@
     import { tick } from "svelte";
     import CacheSlot from "./lib/CacheSlot.svelte";
     import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
+    import FontObserver from "./lib/FontObserver.svelte";
 
     let slotMasks = [];
     let previewMasks = [];
@@ -100,7 +101,7 @@
             layers: [],
         },
         {
-            name: "最",
+            name: "自定义",
             background: "#ffffff",
             pos: { x: 519, y: 448 },
             dynamic: "",
@@ -159,87 +160,93 @@
                 render={"demand"}
             >
                 <Loader resources={[templateUrl, maskUrl]}>
-                    <Sprite
-                        texture={PIXI.Texture.WHITE}
-                        width={680}
-                        height={680}
-                    />
-                    {#each slots as slot, index (slot.name)}
-                        <Container mask={slotMasks[index]} {...slot.pos}>
-                            <Sprite
-                                texture={PIXI.Texture.from(maskUrl)}
-                                x={-2}
-                                y={-2}
-                                bind:instance={slotMasks[index]}
-                            />
-                            <Sprite
-                                texture={PIXI.Texture.WHITE}
-                                filters={[
-                                    new ColorOverlayFilter(
-                                        PIXI.utils.string2hex(slot.background)
-                                    ),
-                                ]}
-                                width={117}
-                                height={166}
-                            />
-                            <CacheSlot
-                                renderSlot={slot}
-                                selectedLayer={selectedSlot === index
-                                    ? selectedLayer
-                                    : undefined}
-                            />
-                        </Container>
-                    {/each}
-                    <Sprite
-                        texture={PIXI.Texture.from(templateUrl)}
-                        width={680}
-                        height={680}
-                    />
-                    {#each slots as slot}
-                        {#if slot.dynamic}
-                            <Container {...slot.pos}>
-                                <Text
-                                    text={slot.dynamic}
-                                    x={34}
-                                    y={169}
-                                    style={{
-                                        fill: 0,
-                                        fontFamily: [
-                                            "Noto Sans TC",
-                                            "Noto Sans SC",
-                                            "Noto Sans JP",
-                                            "sans-serif",
-                                        ],
-                                        fontSize: 16,
-                                        fontWeight: "600",
-                                        align: "center",
-                                        textBaseline: "alphabetic",
-                                    }}
+                    <FontObserver
+                        fonts={["Noto Sans TC", "Noto Sans SC", "Noto Sans JP"]}
+                    >
+                        <Sprite
+                            texture={PIXI.Texture.WHITE}
+                            width={680}
+                            height={680}
+                        />
+                        {#each slots as slot, index (slot.name)}
+                            <Container mask={slotMasks[index]} {...slot.pos}>
+                                <Sprite
+                                    texture={PIXI.Texture.from(maskUrl)}
+                                    x={-2}
+                                    y={-2}
+                                    bind:instance={slotMasks[index]}
+                                />
+                                <Sprite
+                                    texture={PIXI.Texture.WHITE}
+                                    filters={[
+                                        new ColorOverlayFilter(
+                                            PIXI.utils.string2hex(
+                                                slot.background
+                                            )
+                                        ),
+                                    ]}
+                                    width={117}
+                                    height={166}
+                                />
+                                <CacheSlot
+                                    renderSlot={slot}
+                                    selectedLayer={selectedSlot === index
+                                        ? selectedLayer
+                                        : undefined}
                                 />
                             </Container>
-                        {/if}
-                    {/each}
-                    <Container mask={previewMask} alpha={0.8}>
-                        {#if selectedSlot !== undefined && selectedLayer !== undefined}
-                            {@const slot = slots[selectedSlot]}
-                            {@const image = slot.layers[selectedLayer]}
-                            <Sprite
-                                texture={PIXI.Texture.WHITE}
-                                width={680}
-                                height={680}
-                                filters={[new ColorOverlayFilter(0)]}
-                            />
-                            <CachedResizeSprite
-                                texture={new PIXI.Texture(
-                                    new PIXI.BaseTexture(image.image)
-                                )}
-                                alpha={0.6}
-                                x={slot.pos.x + image.pos.x}
-                                y={slot.pos.y + image.pos.y}
-                                {...image.rect}
-                            />
-                        {/if}
-                    </Container>
+                        {/each}
+                        <Sprite
+                            texture={PIXI.Texture.from(templateUrl)}
+                            width={680}
+                            height={680}
+                        />
+                        {#each slots as slot}
+                            {#if slot.dynamic}
+                                <Container {...slot.pos}>
+                                    <Text
+                                        text={slot.dynamic}
+                                        x={34}
+                                        y={169}
+                                        style={{
+                                            fill: 0,
+                                            fontFamily: [
+                                                "Noto Sans TC",
+                                                "Noto Sans SC",
+                                                "Noto Sans JP",
+                                                "sans-serif",
+                                            ],
+                                            fontSize: 16,
+                                            fontWeight: "600",
+                                            align: "center",
+                                            textBaseline: "alphabetic",
+                                        }}
+                                    />
+                                </Container>
+                            {/if}
+                        {/each}
+                        <Container mask={previewMask} alpha={0.8}>
+                            {#if selectedSlot !== undefined && selectedLayer !== undefined}
+                                {@const slot = slots[selectedSlot]}
+                                {@const image = slot.layers[selectedLayer]}
+                                <Sprite
+                                    texture={PIXI.Texture.WHITE}
+                                    width={680}
+                                    height={680}
+                                    filters={[new ColorOverlayFilter(0)]}
+                                />
+                                <CachedResizeSprite
+                                    texture={new PIXI.Texture(
+                                        new PIXI.BaseTexture(image.image)
+                                    )}
+                                    alpha={0.6}
+                                    x={slot.pos.x + image.pos.x}
+                                    y={slot.pos.y + image.pos.y}
+                                    {...image.rect}
+                                />
+                            {/if}
+                        </Container>
+                    </FontObserver>
                 </Loader>
             </Application>
             {#each slots as slot, index}
