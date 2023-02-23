@@ -365,7 +365,7 @@
         <div class="py-2 text-center text-sm italic">
             <p class="font-bold not-italic">
                 {$_("label.language")}
-                <select bind:value={$_.lang}>
+                <select bind:value={$_.lang} class="bg-white">
                     <option value="zh-TW">中文</option>
                     <option value="en">English</option>
                 </select>
