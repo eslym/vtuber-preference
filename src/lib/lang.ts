@@ -1,9 +1,9 @@
 /**
  * A very simple language system.
  */
-import type { Readable, Subscriber } from "svelte/store";
+import type { Subscriber, Writable } from "svelte/store";
 
-interface Lang extends Readable<Lang> {
+interface Lang extends Writable<Lang> {
     (key: string): string;
     lang: string;
 }
@@ -61,6 +61,8 @@ export const _: Lang = Object.defineProperties(lang, {
 }) as any;
 
 _.subscribe = subscibe;
+_.set = () => undefined;
+_.update = () => undefined;
 
 window.addEventListener("storage", (event) => {
     if (event.key !== langKey) return;
