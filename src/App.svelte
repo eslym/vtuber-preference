@@ -151,6 +151,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>{$_("title")}</title>
+</svelte:head>
+
 <div
     class="flex h-screen w-screen flex-row bg-opacity-90"
     class:bg-black={selectedSlot !== undefined && selectedLayer !== undefined}
