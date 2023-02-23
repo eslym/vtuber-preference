@@ -228,12 +228,12 @@
                                 zIndex={2}
                             />
                             {#each slots as slot}
-                                {#if slot.name?.length}
-                                    <Container
-                                        x={slot.pos.x + 1}
-                                        y={slot.pos.y + 167}
-                                        zIndex={3}
-                                    >
+                                <Container
+                                    x={slot.pos.x + 1}
+                                    y={slot.pos.y + 167}
+                                    zIndex={3}
+                                >
+                                    {#if slot.name?.length}
                                         <Sprite
                                             texture={PIXI.Texture.from(
                                                 textBgUrl
@@ -263,8 +263,8 @@
                                             maxWidth={108}
                                             maxHeight={26}
                                         />
-                                    </Container>
-                                {/if}
+                                    {/if}
+                                </Container>
                             {/each}
                             <Container
                                 mask={previewMask}
