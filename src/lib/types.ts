@@ -16,9 +16,9 @@ export interface SlotLayer {
 }
 
 export interface Slot {
-    name: string;
-    dynamic?: string;
+    name?: string;
     background: string;
+    color: string;
     pos: Pos;
     layers: SlotLayer[];
 }

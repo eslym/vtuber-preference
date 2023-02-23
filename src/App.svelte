@@ -1,11 +1,12 @@
 <script lang="ts">
     import Resizer from "./lib/Resizer.svelte";
     import templateUrl from "./assets/template.png";
+    import enTemplateUrl from "./assets/en-template.png";
     import maskUrl from "./assets/mask.png";
     import textBgUrl from "./assets/text-field-bg.png";
     import type { Slot } from "./lib/types";
     import ImageList from "./lib/ImageList.svelte";
-    import { Application, Loader, Sprite, Container, Text } from "svelte-pixi";
+    import { Application, Loader, Sprite, Container } from "svelte-pixi";
     import * as PIXI from "pixi.js";
     import CachedResizeSprite from "./lib/CachedResizeSprite.svelte";
     import { tick } from "svelte";
@@ -13,99 +14,99 @@
     import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
     import FontObserver from "./lib/FontObserver.svelte";
     import SizedText from "./lib/SizedText.svelte";
-    import { floor } from "lodash";
+    import { _ } from "./lib/lang";
 
     let slotMasks = [];
     let previewMasks = [];
 
     let slots: Slot[] = [
         {
-            name: "第一個看的",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 48, y: 48 },
             layers: [],
         },
         {
-            name: "最常看的",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 166, y: 48 },
             layers: [],
         },
         {
-            name: "最佳節目",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 283, y: 48 },
             layers: [],
         },
         {
-            name: "最瘋狂的",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 401, y: 48 },
             layers: [],
         },
         {
-            name: "最療愈的",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 519, y: 48 },
             layers: [],
         },
         {
-            name: "聲音最好聽的",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 48, y: 248 },
             layers: [],
         },
         {
-            name: "唱歌最好聽的",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 166, y: 248 },
             layers: [],
         },
         {
-            name: "最喜歡的",
             background: "#ffffff",
+            color: "#ff0000",
             pos: { x: 283, y: 248 },
             layers: [],
         },
         {
-            name: "影響最深遠的",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 401, y: 248 },
             layers: [],
         },
         {
-            name: "最漂亮的",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 519, y: 248 },
             layers: [],
         },
         {
-            name: "最想犯罪的",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 48, y: 448 },
             layers: [],
         },
         {
-            name: "最帥的",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 166, y: 448 },
             layers: [],
         },
         {
-            name: "最想推廣的",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 283, y: 448 },
             layers: [],
         },
         {
-            name: "最婆的",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 401, y: 448 },
             layers: [],
         },
         {
-            name: "自定义",
             background: "#ffffff",
+            color: "#000000",
             pos: { x: 519, y: 448 },
             layers: [],
         },
@@ -164,103 +165,128 @@
                 backgroundColor={white}
                 bind:instance={pixiApp}
                 antialias={true}
+                resolution={1}
                 render={"demand"}
             >
-                <Loader resources={[templateUrl, maskUrl, textBgUrl]}>
+                <Loader
+                    resources={[templateUrl, enTemplateUrl, maskUrl, textBgUrl]}
+                >
                     <FontObserver
                         fonts={["Noto Sans TC", "Noto Sans SC", "Noto Sans JP"]}
                     >
-                        <Sprite
-                            texture={PIXI.Texture.WHITE}
-                            width={680}
-                            height={680}
-                        />
-                        {#each slots as slot, index (slot)}
-                            <Container mask={slotMasks[index]} {...slot.pos}>
-                                <Sprite
-                                    texture={PIXI.Texture.from(maskUrl)}
-                                    x={-2}
-                                    y={-2}
-                                    bind:instance={slotMasks[index]}
-                                />
-                                <Sprite
-                                    texture={PIXI.Texture.WHITE}
-                                    filters={[
-                                        new ColorOverlayFilter(
-                                            PIXI.utils.string2hex(
-                                                slot.background
-                                            )
-                                        ),
-                                    ]}
-                                    width={117}
-                                    height={166}
-                                />
-                                <CacheSlot
-                                    renderSlot={slot}
-                                    selectedLayer={selectedSlot === index
-                                        ? selectedLayer
-                                        : undefined}
-                                />
-                            </Container>
-                        {/each}
-                        <Sprite
-                            texture={PIXI.Texture.from(templateUrl)}
-                            width={680}
-                            height={680}
-                        />
-                        {#each slots as slot}
-                            {#if slot.dynamic?.length}
+                        <Container sortableChildren={true}>
+                            <Sprite
+                                texture={PIXI.Texture.WHITE}
+                                width={680}
+                                height={680}
+                                zIndex={0}
+                            />
+                            {#each slots as slot, index (slot)}
                                 <Container
-                                    x={slot.pos.x + 1}
-                                    y={slot.pos.y + 167}
+                                    mask={slotMasks[index]}
+                                    {...slot.pos}
+                                    zIndex={1}
                                 >
                                     <Sprite
-                                        texture={PIXI.Texture.from(textBgUrl)}
+                                        texture={PIXI.Texture.from(maskUrl)}
+                                        x={-2}
+                                        y={-2}
+                                        bind:instance={slotMasks[index]}
                                     />
-                                    <SizedText
-                                        text={slot.dynamic.trim()}
-                                        style={{
-                                            fill: 0,
-                                            breakWords: true,
-                                            fontFamily: [
-                                                "Noto Sans TC",
-                                                "Noto Sans SC",
-                                                "Noto Sans JP",
-                                                "sans-serif",
-                                            ],
-                                            fontSize: 15,
-                                            align: "center",
-                                            textBaseline: "alphabetic",
-                                        }}
-                                        anchor={0.5}
-                                        x={56}
-                                        y={14}
-                                        maxWidth={110}
-                                        maxHeight={26}
+                                    <Sprite
+                                        texture={PIXI.Texture.WHITE}
+                                        filters={[
+                                            new ColorOverlayFilter(
+                                                PIXI.utils.string2hex(
+                                                    slot.background
+                                                )
+                                            ),
+                                        ]}
+                                        width={117}
+                                        height={166}
+                                    />
+                                    <CacheSlot
+                                        renderSlot={slot}
+                                        selectedLayer={selectedSlot === index
+                                            ? selectedLayer
+                                            : undefined}
                                     />
                                 </Container>
-                            {/if}
-                        {/each}
-                        <Container mask={previewMask} alpha={0.8}>
-                            {#if selectedSlot !== undefined && selectedLayer !== undefined}
-                                {@const slot = slots[selectedSlot]}
-                                {@const image = slot.layers[selectedLayer]}
-                                <Sprite
-                                    texture={PIXI.Texture.WHITE}
-                                    width={680}
-                                    height={680}
-                                    filters={[new ColorOverlayFilter(0)]}
-                                />
-                                <CachedResizeSprite
-                                    texture={new PIXI.Texture(
-                                        new PIXI.BaseTexture(image.image)
-                                    )}
-                                    alpha={0.75}
-                                    x={slot.pos.x + image.pos.x}
-                                    y={slot.pos.y + image.pos.y}
-                                    {...image.rect}
-                                />
-                            {/if}
+                            {/each}
+                            <Sprite
+                                texture={PIXI.Texture.from(
+                                    $_.lang === "zh-TW"
+                                        ? templateUrl
+                                        : enTemplateUrl
+                                )}
+                                width={680}
+                                height={680}
+                                zIndex={2}
+                            />
+                            {#each slots as slot}
+                                {#if slot.name?.length}
+                                    <Container
+                                        x={slot.pos.x + 1}
+                                        y={slot.pos.y + 167}
+                                        zIndex={3}
+                                    >
+                                        <Sprite
+                                            texture={PIXI.Texture.from(
+                                                textBgUrl
+                                            )}
+                                        />
+                                        <SizedText
+                                            text={slot.name.trim()}
+                                            style={{
+                                                fill: PIXI.utils.string2hex(
+                                                    slot.color
+                                                ),
+                                                breakWords: true,
+                                                fontFamily: [
+                                                    "Noto Sans TC",
+                                                    "Noto Sans SC",
+                                                    "Noto Sans JP",
+                                                    "sans-serif",
+                                                ],
+                                                fontSize: 15,
+                                                fontWeight: "bold",
+                                                align: "center",
+                                                textBaseline: "alphabetic",
+                                            }}
+                                            anchor={0.5}
+                                            x={56}
+                                            y={14}
+                                            maxWidth={108}
+                                            maxHeight={26}
+                                        />
+                                    </Container>
+                                {/if}
+                            {/each}
+                            <Container
+                                mask={previewMask}
+                                alpha={0.8}
+                                zIndex={4}
+                            >
+                                {#if selectedSlot !== undefined && selectedLayer !== undefined}
+                                    {@const slot = slots[selectedSlot]}
+                                    {@const image = slot.layers[selectedLayer]}
+                                    <Sprite
+                                        texture={PIXI.Texture.WHITE}
+                                        width={680}
+                                        height={680}
+                                        filters={[new ColorOverlayFilter(0)]}
+                                    />
+                                    <CachedResizeSprite
+                                        texture={new PIXI.Texture(
+                                            new PIXI.BaseTexture(image.image)
+                                        )}
+                                        alpha={0.75}
+                                        x={slot.pos.x + image.pos.x}
+                                        y={slot.pos.y + image.pos.y}
+                                        {...image.rect}
+                                    />
+                                {/if}
+                            </Container>
                         </Container>
                     </FontObserver>
                 </Loader>
@@ -320,8 +346,8 @@
         class="flex h-full w-80 flex-col overflow-auto border-slate-200 bg-white shadow"
     >
         <button
-            class="bg-slate-400 p-2 text-center text-lg font-bold text-white"
-            on:click={exportImage}>導出</button
+            class="bg-indigo-600 p-2 text-center text-lg font-bold text-white"
+            on:click={exportImage}>{$_("label.export")}</button
         >
         <div class="h-0 flex-grow">
             {#if selectedSlot !== undefined}
@@ -333,8 +359,15 @@
             {/if}
         </div>
         <div class="py-2 text-center text-sm italic">
-            <p>
-                Credit: <a
+            <p class="font-bold not-italic">
+                {$_("label.language")}
+                <select bind:value={$_.lang}>
+                    <option value="zh-TW">中文</option>
+                    <option value="en">English</option>
+                </select>
+            </p>
+            <p class="mt-2">
+                {$_("label.credit")}<a
                     class="text-blue-700"
                     target="_blank"
                     rel="noreferrer"
@@ -343,7 +376,16 @@
                 >
             </p>
             <p class="mt-2">
-                代碼: <a
+                {$_("label.translate")}<a
+                    class="text-blue-700"
+                    target="_blank"
+                    rel="noreferrer"
+                    href="https://twitter.com/Ichiroku16_Vt/status/1628215427733266432"
+                    >@Ichiroku16_Vt</a
+                >
+            </p>
+            <p class="mt-2">
+                {$_("label.code")}<a
                     href="https://github.com/eslym/vtuber-preference"
                     class="text-blue-700"
                     target="_blank"

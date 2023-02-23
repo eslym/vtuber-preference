@@ -2,6 +2,8 @@
     import type { Slot, SlotLayer } from "./types";
     import ColorPicker from "svelte-awesome-color-picker";
     import PickerInput from "./PickerInput.svelte";
+    import { _ } from "./lang";
+    import PickerInputNoText from "./PickerInputNoText.svelte";
 
     export let slot: Slot;
     export let selectedLayer: number | undefined;
@@ -85,10 +87,18 @@
                 selectedLayer = undefined;
             }}>＜</button
         >
+        {#if slot.name?.length}
+            <ColorPicker
+                bind:hex={slot.color}
+                isAlpha={false}
+                label=""
+                components={{ input: PickerInputNoText }}
+            />
+        {/if}
         <input
-            bind:value={slot.dynamic}
-            class="w-0 flex-grow bg-transparent py-2 px-4 font-normal text-slate-100 underline-offset-4 placeholder:text-slate-300 focus:outline-none"
-            placeholder={slot.name}
+            bind:value={slot.name}
+            class="w-0 flex-grow bg-transparent py-2 px-1 font-normal text-slate-100 underline-offset-4 placeholder:text-slate-300 focus:outline-none"
+            placeholder={$_(`slots.${selectedSlot}`)}
         />
         <button
             class="p-2"
@@ -102,7 +112,7 @@
         <ColorPicker
             bind:hex={slot.background}
             isAlpha={false}
-            label="背景色"
+            label={$_("label.bgColor")}
             components={{ input: PickerInput }}
         />
     </div>
@@ -144,7 +154,8 @@
                 </div>
                 <button
                     class="h-10 w-10 bg-slate-500 font-bold text-white"
-                    on:click={() => {
+                    on:mousedown|stopPropagation={() => undefined}
+                    on:click|stopPropagation={() => {
                         slot.layers = slot.layers.filter((l) => l !== layer);
                         selectedLayer =
                             selectedLayer > index
@@ -158,7 +169,7 @@
         {/each}
         <button
             class="block p-0.5 hover:bg-gray-300 active:bg-gray-200"
-            on:click|stopPropagation={() => input.click()}>添加圖片</button
+            on:click={() => input.click()}>{$_("label.addImage")}</button
         >
     </div>
 </div>

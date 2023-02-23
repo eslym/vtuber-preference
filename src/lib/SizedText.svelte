@@ -53,27 +53,30 @@
         });
         let scale = calculateScale(textStyle, maxWidth);
         if (scale < 1) {
-            let bound = maxWidth;
             let current = maxWidth / scale;
+            let half = current;
             scale = calculateScale(textStyle, current);
             // binary search to find the word wrap width which can produce the largest scale.
-            while (true) {
-                let nw = (bound + current) / 2;
-                let ns = calculateScale(textStyle, nw);
-                if (ns > scale) {
-                    current = nw;
-                    scale = ns;
+            while (half > 2) {
+                half /= 2;
+                let a = {
+                    width: current - half,
+                    scale: calculateScale(textStyle, current - half),
+                };
+                let b = {
+                    width: current + half,
+                    scale: calculateScale(textStyle, current + half),
+                };
+                if (a.scale > scale && a.scale > b.scale) {
+                    current = a.width;
+                    scale = a.scale;
                     continue;
                 }
-                let fw = current + (nw - bound);
-                let fs = calculateScale(textStyle, fw);
-                if (fs > scale) {
-                    bound = current;
-                    current = fw;
-                    scale = fs;
+                if (b.scale > scale && b.scale > a.scale) {
+                    current = b.width;
+                    scale = b.scale;
                     continue;
                 }
-                break;
             }
             textStyle.wordWrapWidth = current;
         }
@@ -81,6 +84,7 @@
         drawText.width *= scale;
         drawText.height *= scale;
         return app.renderer.generateTexture(drawText, {
+            scaleMode: PIXI.SCALE_MODES.LINEAR,
             region: new PIXI.Rectangle(0, 0, drawText.width, drawText.height),
         });
     }
