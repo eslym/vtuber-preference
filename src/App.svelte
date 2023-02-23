@@ -2,6 +2,7 @@
     import Resizer from "./lib/Resizer.svelte";
     import templateUrl from "./assets/template.png";
     import maskUrl from "./assets/mask.png";
+    import textBgUrl from "./assets/text-field-bg.png";
     import type { Slot } from "./lib/types";
     import ImageList from "./lib/ImageList.svelte";
     import { Application, Loader, Sprite, Container, Text } from "svelte-pixi";
@@ -11,6 +12,8 @@
     import CacheSlot from "./lib/CacheSlot.svelte";
     import { ColorOverlayFilter } from "@pixi/filter-color-overlay";
     import FontObserver from "./lib/FontObserver.svelte";
+    import SizedText from "./lib/SizedText.svelte";
+    import { floor } from "lodash";
 
     let slotMasks = [];
     let previewMasks = [];
@@ -104,7 +107,6 @@
             name: "自定义",
             background: "#ffffff",
             pos: { x: 519, y: 448 },
-            dynamic: "",
             layers: [],
         },
     ];
@@ -148,8 +150,13 @@
     }
 </script>
 
-<div class="flex h-screen w-screen flex-col items-center justify-center gap-4">
-    <div class="flex flex-row shadow-lg">
+<div
+    class="flex h-screen w-screen flex-row bg-opacity-90"
+    class:bg-black={selectedSlot !== undefined && selectedLayer !== undefined}
+>
+    <div
+        class="flex flex-grow flex-row items-center justify-center overflow-hidden shadow-lg"
+    >
         <div class="template">
             <Application
                 width={680}
@@ -159,7 +166,7 @@
                 antialias={true}
                 render={"demand"}
             >
-                <Loader resources={[templateUrl, maskUrl]}>
+                <Loader resources={[templateUrl, maskUrl, textBgUrl]}>
                     <FontObserver
                         fonts={["Noto Sans TC", "Noto Sans SC", "Noto Sans JP"]}
                     >
@@ -168,7 +175,7 @@
                             width={680}
                             height={680}
                         />
-                        {#each slots as slot, index (slot.name)}
+                        {#each slots as slot, index (slot)}
                             <Container mask={slotMasks[index]} {...slot.pos}>
                                 <Sprite
                                     texture={PIXI.Texture.from(maskUrl)}
@@ -202,25 +209,34 @@
                             height={680}
                         />
                         {#each slots as slot}
-                            {#if slot.dynamic}
-                                <Container {...slot.pos}>
-                                    <Text
-                                        text={slot.dynamic}
-                                        x={34}
-                                        y={169}
+                            {#if slot.dynamic?.length}
+                                <Container
+                                    x={slot.pos.x + 1}
+                                    y={slot.pos.y + 167}
+                                >
+                                    <Sprite
+                                        texture={PIXI.Texture.from(textBgUrl)}
+                                    />
+                                    <SizedText
+                                        text={slot.dynamic.trim()}
                                         style={{
                                             fill: 0,
+                                            breakWords: true,
                                             fontFamily: [
                                                 "Noto Sans TC",
                                                 "Noto Sans SC",
                                                 "Noto Sans JP",
                                                 "sans-serif",
                                             ],
-                                            fontSize: 16,
-                                            fontWeight: "600",
+                                            fontSize: 15,
                                             align: "center",
                                             textBaseline: "alphabetic",
                                         }}
+                                        anchor={0.5}
+                                        x={56}
+                                        y={14}
+                                        maxWidth={110}
+                                        maxHeight={26}
                                     />
                                 </Container>
                             {/if}
@@ -239,7 +255,7 @@
                                     texture={new PIXI.Texture(
                                         new PIXI.BaseTexture(image.image)
                                     )}
-                                    alpha={0.6}
+                                    alpha={0.75}
                                     x={slot.pos.x + image.pos.x}
                                     y={slot.pos.y + image.pos.y}
                                     {...image.rect}
@@ -299,46 +315,48 @@
                 </div>
             {/each}
         </div>
-        <div class="flex w-80 flex-col overflow-auto bg-white">
-            <div class="h-0 flex-grow">
-                {#if selectedSlot !== undefined}
-                    <ImageList
-                        bind:slot={slots[selectedSlot]}
-                        bind:selectedLayer
-                        bind:selectedSlot
-                    />
-                {/if}
-            </div>
-            <button
-                class="bg-slate-400 p-2 text-center text-lg font-bold text-white"
-                on:click={exportImage}>保存</button
-            >
-        </div>
     </div>
-    <div class="text-center text-sm italic">
-        <p>
-            Credit: <a
-                class="text-blue-700"
-                target="_blank"
-                rel="noreferrer"
-                href="https://twitter.com/EastAiruier/status/1624174786359496704"
-                >@EastAiruier</a
-            >
-        </p>
-        <p class="mt-2">
-            代碼: <a
-                href="https://github.com/eslym/vtuber-preference"
-                class="text-blue-700"
-                target="_blank"
-                rel="noreferrer">eslym/vtuber-preference</a
-            >
-        </p>
+    <div
+        class="flex h-full w-80 flex-col overflow-auto border-slate-200 bg-white shadow"
+    >
+        <button
+            class="bg-slate-400 p-2 text-center text-lg font-bold text-white"
+            on:click={exportImage}>導出</button
+        >
+        <div class="h-0 flex-grow">
+            {#if selectedSlot !== undefined}
+                <ImageList
+                    bind:slot={slots[selectedSlot]}
+                    bind:selectedLayer
+                    bind:selectedSlot
+                />
+            {/if}
+        </div>
+        <div class="py-2 text-center text-sm italic">
+            <p>
+                Credit: <a
+                    class="text-blue-700"
+                    target="_blank"
+                    rel="noreferrer"
+                    href="https://twitter.com/EastAiruier/status/1624174786359496704"
+                    >@EastAiruier</a
+                >
+            </p>
+            <p class="mt-2">
+                代碼: <a
+                    href="https://github.com/eslym/vtuber-preference"
+                    class="text-blue-700"
+                    target="_blank"
+                    rel="noreferrer">eslym/vtuber-preference</a
+                >
+            </p>
+        </div>
     </div>
 </div>
 
 <style lang="postcss">
     .template {
-        @apply relative select-none;
+        @apply relative select-none shadow;
         width: 680px;
         height: 680px;
     }

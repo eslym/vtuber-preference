@@ -85,15 +85,11 @@
                 selectedLayer = undefined;
             }}>＜</button
         >
-        {#if slot.dynamic === undefined}
-            <div class="w-0 flex-grow px-4 py-2">{slot.name}</div>
-        {:else}
-            <input
-                bind:value={slot.dynamic}
-                class="w-0 flex-grow bg-transparent py-2 px-4 font-normal text-slate-200 underline-offset-4 placeholder:text-slate-400 placeholder:underline focus:outline-none"
-                placeholder={slot.name}
-            />
-        {/if}
+        <input
+            bind:value={slot.dynamic}
+            class="w-0 flex-grow bg-transparent py-2 px-4 font-normal text-slate-100 underline-offset-4 placeholder:text-slate-300 focus:outline-none"
+            placeholder={slot.name}
+        />
         <button
             class="p-2"
             on:click={() => {
